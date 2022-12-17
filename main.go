@@ -195,7 +195,13 @@ func main() {
 			thumbnailStr := ""
 
 			if !suppressThumb && (createNfo || forceNfo) {
-				thumbnail := gjson.GetBytes(json, "thumbnails.3.url")
+				thumbnail := gjson.GetBytes(json, "thumbnail")
+				if !thumbnail.Exists() {
+					thumbnail = gjson.GetBytes(json, "thumbnails.#(width>=640)#.first.url")
+				}
+				if !thumbnail.Exists() {
+					thumbnail = gjson.GetBytes(json, "thumbnails.3.url")
+				}
 				if !thumbnail.Exists() {
 					thumbnail = gjson.GetBytes(json, "thumbnails.2.url")
 				}
@@ -204,9 +210,6 @@ func main() {
 				}
 				if !thumbnail.Exists() {
 					thumbnail = gjson.GetBytes(json, "thumbnails.0.url")
-				}
-				if !thumbnail.Exists() {
-					thumbnail = gjson.GetBytes(json, "thumbnail")
 				}
 				if fetchThumb {
 
