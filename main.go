@@ -2,6 +2,8 @@ package main
 
 import (
 	"compress/gzip"
+
+	json2 "encoding/json"
 	"encoding/xml"
 	"errors"
 	"flag"
@@ -23,7 +25,16 @@ func assertNotError(e error) {
 	if e != nil {
 		log.Printf("Error! %f\n", e)
 	}
+}
 
+type Dms struct {
+	Title     string        `json:"Title"`
+	Resources []DmsResource `json:"Resources"`
+}
+
+type DmsResource struct {
+	MimeType string `json:"MimeType"`
+	Command  string `json:"Command"`
 }
 
 type Nfo struct {
@@ -125,12 +136,14 @@ func main() {
 	var suppressThumb bool
 	var forceNfo bool
 	var forceStrm bool
+	var forceDms bool
 	var sleep int
 	flag.BoolVar(&fetchThumb, "fetchthumb", false, "Retrieve the thumbnail image and refer to it as file rather than URL")
 	flag.BoolVar(&forceFetchThumb, "forcefetchthumb", false, "Force fetch thumbnail image even if already fetched")
 	flag.BoolVar(&suppressThumb, "suppressthumb", false, "Suppress thumbnail image")
 	flag.BoolVar(&forceNfo, "forcenfo", false, "Force creation of nfo")
 	flag.BoolVar(&forceStrm, "forcestrm", false, "Force creation of strm")
+	flag.BoolVar(&forceDms, "forceDms", false, "Force creation dms.json")
 	flag.IntVar(&sleep, "sleep", 0, "Sleep before parsing")
 	flag.Parse()
 
@@ -139,7 +152,7 @@ func main() {
 	}
 	filename := flag.Args()[0]
 
-	fmt.Printf("Converting %s, fetchthumb=%v, suppressthumb=%v, forcenfo=%v, forcestrm=%v\n", filename, fetchThumb, suppressThumb, forceNfo, forceStrm)
+	fmt.Printf("Converting %s, fetchthumb=%v, suppressthumb=%v, forcenfo=%v, forcestrm=%v, forcedms=%v\n", filename, fetchThumb, suppressThumb, forceNfo, forceStrm, forceDms)
 
 	filenameRegex := regexp.MustCompile(`(.*.info.json)(\.gz)?`)
 	filenameMatches := filenameRegex.FindStringSubmatch(filepath.Base(filename))
@@ -154,8 +167,10 @@ func main() {
 
 		strmFilePath := directory + "/" + base + ".strm"
 		nfoFilePath := directory + "/" + base + ".nfo"
+		dmsFilePath := directory + "/" + base + ".dms.json"
 		createNfo := false
 		createStrm := false
+		createDms := false
 		if _, err := os.Stat(strmFilePath); err == nil {
 			fmt.Printf("STRM %s exist, skipping\n", strmFilePath)
 			//Don't need to create
@@ -168,8 +183,14 @@ func main() {
 		} else if os.IsNotExist(err) {
 			createNfo = true
 		}
+		if _, err := os.Stat(dmsFilePath); err == nil {
+			fmt.Printf("DMS %s exist, skipping\n", dmsFilePath)
+			//Don't need to create
+		} else if os.IsNotExist(err) {
+			createDms = true
+		}
 
-		if createStrm || createNfo || forceNfo || forceStrm || forceFetchThumb {
+		if createStrm || createNfo || forceNfo || forceStrm || forceFetchThumb || createDms {
 
 			var json []byte
 			var err error
@@ -262,13 +283,19 @@ func main() {
 					assertNotError(err)
 				}
 			}
-			if createNfo || forceNfo || forceFetchThumb {
+
+			if createNfo || forceNfo || forceFetchThumb || createDms {
 				var nfo *Nfo
+				var dms *Dms
 				switch extractorKey.Str {
 				case "Youtube":
 					set := Set{Name: fmt.Sprintf("%s : %s ", channel, playlistTitle)}
 					nfo = &Nfo{Title: title.Str, SortTitle: title.Str, Plot: description.Str, Thumb: thumbnailStr, Genre: categorylist,
 						Premiered: tm.Format("2006-01-02"), Tag: taglist, Directory: uploader.Str, Studio: playlistUploader.Str, Set: set}
+
+					// command := fmt.Sprintf("yt-dlp --proxy http://127.0.0.1:6666 -f 22 %s -o -", id)
+					command := fmt.Sprintf("play-stream %s", id)
+					dms = &Dms{Title: title.Str, Resources: []DmsResource{{MimeType: "video/mp4", Command: command}}}
 				case "SVTPlay":
 					// "series": "Lokala Nyheter Örebro
 					// "playlist": "Lokala Nyheter Örebro",
@@ -291,6 +318,22 @@ func main() {
 					err = os.Chtimes(nfoFilePath, tm, tm)
 					assertNotError(err)
 				}
+
+				if createDms && dms != nil {
+					dmsFile, _ := os.Create(dmsFilePath)
+					defer dmsFile.Close()
+					assertNotError(err)
+
+					jsonData, err := json2.Marshal(dms)
+					assertNotError(err)
+
+					_, err = dmsFile.Write(jsonData)
+					assertNotError(err)
+
+					err = os.Chtimes(dmsFilePath, tm, tm)
+					assertNotError(err)
+				}
+
 			}
 
 			//			if createStrm || createNfo {
