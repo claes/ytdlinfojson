@@ -36,10 +36,13 @@ extractor_key="Youtube"
 
 # Use the provided or default pattern to generate the filename
 # Replace '%(id)s' with video_id and '%(title)s' with title in the pattern
-filename=$(echo "$pattern" | sed "s/%(id)/$video_id/" | sed "s/%(title)/$title/")
+
+cleaned_title=$(echo "$title" | sed 's/[\/:*?"<>|]/_/g')
+
+filename=$(echo "$pattern" | sed "s/%(id)/$video_id/" | sed "s/%(title)/$cleaned_title/")
 
 # Clean up filename (remove or replace any invalid characters for filenames, e.g., slashes)
-filename=$(echo "$filename" | sed 's/[\/:*?"<>|]/_/g')
+#filename=$(echo "$filename" | sed 's/[\/:*?"<>|]/_/g')
 
 json_content=$(cat <<EOF
 {
