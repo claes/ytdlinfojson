@@ -58,6 +58,7 @@
             --set PATH ${nixpkgs.lib.makeBinPath [
             pkgs.bash
             pkgs.curl
+            pkgs.gnugrep
             pkgs.coreutils
             pkgs.gnused
           ]}
