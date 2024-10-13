@@ -7,7 +7,7 @@ if [ -z "$1" ]; then
 fi
 
 if [ -z "$2" ]; then
-  pattern="%(id)s - %(title)s.json"
+  pattern="%(id) - %(title).json"
 else
   pattern="$2"
 fi
@@ -36,7 +36,7 @@ extractor_key="Youtube"
 
 # Use the provided or default pattern to generate the filename
 # Replace '%(id)s' with video_id and '%(title)s' with title in the pattern
-filename=$(echo "$pattern" | sed "s/%(id)s/$video_id/" | sed "s/%(title)s/$title/")
+filename=$(echo "$pattern" | sed "s/%(id)/$video_id/" | sed "s/%(title)/$title/")
 
 # Clean up filename (remove or replace any invalid characters for filenames, e.g., slashes)
 filename=$(echo "$filename" | sed 's/[\/:*?"<>|]/_/g')
