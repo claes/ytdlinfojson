@@ -2,7 +2,7 @@
   description = "A simple Go package";
 
   # Nixpkgs / NixOS version to use.
-  inputs.nixpkgs.url = "nixpkgs/nixos-21.11";
+  inputs.nixpkgs.url = "nixpkgs/nixos-24.05";
 
   outputs = {
     self,
@@ -44,7 +44,12 @@
         # remeber to bump this hash when your dependencies change.
         #vendorSha256 = pkgs.lib.fakeSha256;
 
-        vendorSha256 = "sha256-4PpUu5CyhICjiAUp9rMIbLAIbZRUQdSbwfMdW21q3hs=";
+        vendorHash = "sha256-gBmOvT22LKYdABH/W0aEBVRckbFTPR+87XzXBopMmqA=";
+
+        postInstall = ''
+          mkdir -p $out/bin
+          cp infojsonget.sh $out/bin/
+        '';
       };
     });
 
