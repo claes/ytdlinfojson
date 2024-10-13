@@ -34,6 +34,8 @@
         # in the Nix store.
         src = ./.;
 
+        nativeBuildInputs = builtins.attrValues {inherit (pkgs) makeWrapper;};
+
         # This hash locks the dependencies of this package. It is
         # necessary because of how Go requires network access to resolve
         # VCS.  See https://www.tweag.io/blog/2021-03-04-gomod2nix/ for
@@ -49,6 +51,14 @@
         postInstall = ''
           mkdir -p $out/bin
           cp infojsonget.sh $out/bin/
+        '';
+
+        postFixup = ''
+          wrapProgram $out/bin/infojsonget.sh \
+            --set PATH ${nixpkgs.lib.makeBinPath [
+            pkgs.bash
+            pkgs.curl
+          ]}
         '';
       };
     });

@@ -2,7 +2,7 @@
 
 # Check if a URL is provided as an argument
 if [ -z "$1" ]; then
-  echo "Usage: $0 <YouTube URL>"
+  echo "Usage: $0 <YouTube URL> <optional filename pattern>"
   exit 1
 fi
 
