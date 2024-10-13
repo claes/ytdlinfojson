@@ -6,6 +6,12 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
+if [ -z "$2" ]; then
+  pattern="%(id)s - %(title)s.json"
+else
+  pattern="$2"
+fi
+
 html_content=$(curl -s "$1")
 
 video_id=$(echo "$html_content" | grep -oP '(?<=<meta property="og:url" content="https://www.youtube.com/watch\?v=)[^&"]+')
@@ -27,17 +33,28 @@ formatted_upload_date=$(echo "$upload_date" | sed 's/-//g' | cut -c1-8)
 
 extractor_key="Youtube"
 
-echo '{
-  "id": "'$video_id'",
-  "title": "'$title'",
-  "thumbnail": "'$thumbnail'",
-  "description": "'$description'",
-  "categories": [
-  ],
-  "tags": [
-  ],
-  "channel": "'$channel'",
-  "uploader": "'$channel'",
-  "upload_date": "'$formatted_upload_date'",
-  "extractor_key": "'$extractor_key'"
-}'
+
+# Use the provided or default pattern to generate the filename
+# Replace '%(id)s' with video_id and '%(title)s' with title in the pattern
+filename=$(echo "$pattern" | sed "s/%(id)s/$video_id/" | sed "s/%(title)s/$title/")
+
+# Clean up filename (remove or replace any invalid characters for filenames, e.g., slashes)
+filename=$(echo "$filename" | sed 's/[\/:*?"<>|]/_/g')
+
+json_content=$(cat <<EOF
+{
+  "id": "$video_id",
+  "title": "$title",
+  "thumbnail": "$thumbnail",
+  "description": "$description",
+  "categories": [],
+  "tags": [],
+  "channel": "$channel",
+  "uploader": "$channel",
+  "upload_date": "$formatted_upload_date",
+  "extractor_key": "$extractor_key"
+}
+EOF
+)
+
+echo "$json_content" > "$filename"
