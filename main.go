@@ -136,14 +136,18 @@ func main() {
 	var suppressThumb bool
 	var forceNfo bool
 	var forceStrm bool
+	var skipStrm bool
 	var forceDms bool
+	var requireInfoJson bool
 	var sleep int
 	flag.BoolVar(&fetchThumb, "fetchthumb", false, "Retrieve the thumbnail image and refer to it as file rather than URL")
 	flag.BoolVar(&forceFetchThumb, "forcefetchthumb", false, "Force fetch thumbnail image even if already fetched")
 	flag.BoolVar(&suppressThumb, "suppressthumb", false, "Suppress thumbnail image")
 	flag.BoolVar(&forceNfo, "forcenfo", false, "Force creation of nfo")
 	flag.BoolVar(&forceStrm, "forcestrm", false, "Force creation of strm")
+	flag.BoolVar(&skipStrm, "skipstrm", false, "Skip creation of strm")
 	flag.BoolVar(&forceDms, "forceDms", false, "Force creation dms.json")
+	flag.BoolVar(&requireInfoJson, "requireInfoJson", true, "Require .info.json filename pattern")
 	flag.IntVar(&sleep, "sleep", 0, "Sleep before parsing")
 	flag.Parse()
 
@@ -154,7 +158,12 @@ func main() {
 
 	fmt.Printf("Converting %s, fetchthumb=%v, suppressthumb=%v, forcenfo=%v, forcestrm=%v, forcedms=%v\n", filename, fetchThumb, suppressThumb, forceNfo, forceStrm, forceDms)
 
-	filenameRegex := regexp.MustCompile(`(.*.info.json)(\.gz)?`)
+	var filenameRegex *regexp.Regexp
+	if requireInfoJson {
+		filenameRegex = regexp.MustCompile(`(.*.info.json)(\.gz)?`)
+	} else {
+		filenameRegex = regexp.MustCompile(`(.*)(\.gz)?`)
+	}
 	filenameMatches := filenameRegex.FindStringSubmatch(filepath.Base(filename))
 	if len(filenameMatches) > 0 {
 		directory := filepath.Dir(filename)
@@ -175,7 +184,7 @@ func main() {
 			fmt.Printf("STRM %s exist, skipping\n", strmFilePath)
 			//Don't need to create
 		} else if os.IsNotExist(err) {
-			createStrm = true
+			createStrm = !skipStrm
 		}
 		if _, err := os.Stat(nfoFilePath); err == nil {
 			fmt.Printf("NFO %s exist, skipping\n", nfoFilePath)
@@ -187,7 +196,7 @@ func main() {
 			fmt.Printf("DMS %s exist, skipping\n", dmsFilePath)
 			//Don't need to create
 		} else if os.IsNotExist(err) {
-			createDms = true
+			createDms = forceDms
 		}
 
 		if createStrm || createNfo || forceNfo || forceStrm || forceFetchThumb || createDms {
