@@ -62,6 +62,7 @@
             pkgs.coreutils
             pkgs.gnused
             pkgs.recode
+            pkgs.jq
           ]}
         '';
       };

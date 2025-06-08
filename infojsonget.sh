@@ -44,20 +44,26 @@ filename=$(echo "$pattern" | sed "s/%(id)/$video_id/" | sed "s/%(title)/$cleaned
 # Clean up filename (remove or replace any invalid characters for filenames, e.g., slashes)
 #filename=$(echo "$filename" | sed 's/[\/:*?"<>|]/_/g')
 
-json_content=$(cat <<EOF
-{
-  "id": "$video_id",
-  "title": "$title",
-  "thumbnail": "$thumbnail",
-  "description": "$description",
-  "categories": [],
-  "tags": [],
-  "channel": "$channel",
-  "uploader": "$channel",
-  "upload_date": "$formatted_upload_date",
-  "extractor_key": "$extractor_key"
-}
-EOF
+json_content=$(jq -n \
+  --arg id "$video_id" \
+  --arg title "$title" \
+  --arg thumbnail "$thumbnail" \
+  --arg description "$description" \
+  --arg channel "$channel" \
+  --arg upload_date "$formatted_upload_date" \
+  --arg extractor_key "$extractor_key" \
+  '{
+    id: $id,
+    title: $title,
+    thumbnail: $thumbnail,
+    description: $description,
+    categories: [],
+    tags: [],
+    channel: $channel,
+    uploader: $channel,
+    upload_date: $upload_date,
+    extractor_key: $extractor_key
+  }'
 )
 
 echo "$json_content" > "$filename"
