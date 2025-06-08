@@ -16,16 +16,16 @@ html_content=$(curl -s "$1")
 
 video_id=$(echo "$html_content" | grep -oP '(?<=<meta property="og:url" content="https://www.youtube.com/watch\?v=)[^&"]+')
 
-title=$(echo "$html_content" | grep -oP '(?<=<meta property="og:title" content=").*?(?=")')
+title=$(echo "$html_content" | grep -oP '(?<=<meta property="og:title" content=").*?(?=")' | recode html..utf8) 
 
 thumbnail=$(echo "$html_content" | grep -oP '(?<=<meta property="og:image" content=").*?(?=")')
 
-description=$(echo "$html_content" | grep -oP '(?<=<meta property="og:description" content=").*?(?=")')
+description=$(echo "$html_content" | grep -oP '(?<=<meta property="og:description" content=").*?(?=")' | recode html..utf8)
 
 #channel=$(echo "$html_content" | grep -oP '(?<=<meta property="og:site_name" content=").*?(?=")')
 #channel=$(echo "$html_content" | grep -oP '(?<=<link itemprop="url" href="http://www.youtube.com/@).*?(?=")')
 #channel=$(echo "$html_content" | grep -oP '(?<=<link itemprop="name" href="http://www.youtube.com/@).*?(?=")')
-channel=$(echo "$html_content" | grep -oP '(?<=<link itemprop="name" content=").*?(?=")')
+channel=$(echo "$html_content" | grep -oP '(?<=<link itemprop="name" content=").*?(?=")' | recode html..utf8)
 
 upload_date=$(echo "$html_content" | grep -oP '(?<=<meta itemprop="uploadDate" content=").*?(?=")')
 

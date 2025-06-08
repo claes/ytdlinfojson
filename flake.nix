@@ -61,6 +61,7 @@
             pkgs.gnugrep
             pkgs.coreutils
             pkgs.gnused
+            pkgs.recode
           ]}
         '';
       };
