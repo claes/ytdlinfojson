@@ -2,7 +2,7 @@
   description = "A simple Go package";
 
   # Nixpkgs / NixOS version to use.
-  inputs.nixpkgs.url = "nixpkgs/nixos-24.05";
+  inputs.nixpkgs.url = "nixpkgs/nixos-25.05";
 
   outputs = {
     self,
@@ -61,8 +61,9 @@
             pkgs.gnugrep
             pkgs.coreutils
             pkgs.gnused
-            pkgs.recode
+            #pkgs.recode
             pkgs.jq
+            pkgs.xmlstarlet
           ]}
         '';
       };
